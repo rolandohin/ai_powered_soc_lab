@@ -1,0 +1,31 @@
+{
+  "schema_version": "0.1",
+  "synthetic": true,
+  "alert": {
+    "source": "splunk",
+    "instance_id": "lab",
+    "alert_id": "lab-001",
+    "rule_id": "WIN-PS-001",
+    "rule_version": "draft",
+    "timestamp": "2026-11-06T15:00:00Z",
+    "host_id": "WIN-LAB",
+    "event_refs": [
+      "ev-001"
+    ]
+  },
+  "evidence": [
+    {
+      "id": "ev-001",
+      "type": "sysmon_process_create",
+      "timestamp": "2026-11-06T15:00:00Z",
+      "source_ref": "synthetic:sysmon:001",
+      "image": "powershell.exe",
+      "command_line": "powershell.exe -EncodedCommand VwByAGkAdABlAC0ATwB1AHQAcAB1AHQAIAAnAFMATwBDAC0ATABBAEIAJwA=",
+      "parent_image": "powershell.exe"
+    }
+  ],
+  "missing_evidence": [
+    "parent_process_event",
+    "powershell_script_block"
+  ]
+}
