@@ -60,6 +60,8 @@ The suite covers detection, decoding, model validation, event normalization, and
 | 1. PowerShell analysis and initial detection | Complete |
 | 2. SOC data model and event normalization | Complete |
 | 3. Automated tests, coverage, and CI | Complete |
-| 4. Feasibility and architecture | Next |
+| 4. Feasibility and architecture | In progress |
 | Live Windows telemetry and Splunk ingestion | Planned |
 | AI-assisted investigation and analyst dashboard | Planned |
+
+See the [architecture notes](docs/ARCHITECTURE.md) and [project status](docs/PROJECT_STATUS.md).
