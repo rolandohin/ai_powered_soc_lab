@@ -5,7 +5,7 @@ import re
 import binascii
 import argparse
 from detection_rules import detect_powershell_signals
-
+from detection_rules import ENCODED_COMMAND_OPTION
 
 
 def decode_powershell_payload(encoded_command: str) -> str:
@@ -24,15 +24,15 @@ def build_triage_result(data: dict) -> dict:
         }
 
         match = re.search(
-            r"-EncodedCommand\s+(\S+)",
-            event["command_line"],
+            ENCODED_COMMAND_OPTION + r"\s+(\S+)",
+            event.get("command_line") or "",
             re.IGNORECASE,
         )
 
         if match:
             try:
                 result["decoded_command"] = decode_powershell_payload(match.group(1))
-            except (binascii.Error, UnicodeDecodeError):
+            except ValueError:
                 result["decode_status"] = "failed"
             else:
                 result["decode_status"] = "decoded"
