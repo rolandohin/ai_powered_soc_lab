@@ -77,7 +77,7 @@ class TestTriageIntegration(unittest.TestCase):
         self.assertIsNone(event["decoded_command"])
 
     def test_detects_and_decodes_pwsh_ec_alias(self):
-        payload = "VwByAGkAdABlAC0ATwB1AHQAIAAnAFMATwBDAC0ATABBAEIAJwA="
+        payload = "VwByAGkAdABlAC0ATwB1AHQAcAB1AHQAIAAnAFMATwBDAC0ATABBAEIAJwA="
         event = self._triage_event(
             "lab-001",
             "pwsh.exe",
@@ -86,7 +86,7 @@ class TestTriageIntegration(unittest.TestCase):
         
         self.assertEqual(event["signals"], ["powershell_encoded_command"])
         self.assertEqual(event["decode_status"], "decoded")
-        self.assertEqual(event["decoded_command"], "Write-Out 'SOC-LAB'")
+        self.assertEqual(event["decoded_command"], "Write-Output 'SOC-LAB'")
 
     def test_keeps_detection_signal_when_pwsh_e_payload_is_invalid(self):
         event = self._triage_event(

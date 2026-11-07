@@ -6,7 +6,7 @@ import binascii
 import argparse
 from detection_rules import detect_powershell_signals
 from detection_rules import ENCODED_COMMAND_OPTION
-
+from soc_models import AlertEnvelope
 
 def decode_powershell_payload(encoded_command: str) -> str:
         decoded_bytes = base64.b64decode(encoded_command, validate=True)
@@ -47,7 +47,8 @@ def build_triage_result(data: dict) -> dict:
 
 def main():
     alert_path = Path(__file__).resolve().parent / "fixtures" / "alert.json"
-    data = json.loads(alert_path.read_text(encoding="utf-8-sig"))
+    alert_json = alert_path.read_text(encoding="utf-8-sig")
+    data = AlertEnvelope.model_validate_json(alert_json).model_dump(mode="json")
     parser = argparse.ArgumentParser(description="Triage a PowerShell lab alert")
     parser.add_argument("--json", action="store_true", help="Print JSON output")
     args = parser.parse_args()
