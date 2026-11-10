@@ -1,65 +1,71 @@
-﻿# AI-Powered SOC Lab
+# AI-Powered SOC Lab
 
-A hands-on SOC engineering lab for building detections and investigating alerts with traceable evidence. The first working scenario triages encoded PowerShell invocations using synthetic Windows telemetry.
+A hands-on SOC engineering lab to build reproducible detection, normalization and triage workflows using both synthetic and real Windows telemetry.
 
-## What works today
+## Current working scope (November 2026)
 
-- Detects `-EncodedCommand`, `-e`, and `-ec` on PowerShell process events. It decodes Base64 as UTF-16LE and reports the decoded text without executing it.
-- Validates alerts against a versioned data model, normalizes timestamps to UTC, and keeps source references and missing evidence visible.
-- Normalizes pre-extracted fields from Sysmon process creation (Event ID 1) and PowerShell Script Block Logging (Event ID 4104). An integration test checks that both types of evidence can coexist in one alert.
-- Runs automated tests and reports coverage on Windows with Python 3.14 through [GitHub Actions](https://github.com/rolandohin/ai_powered_soc_lab/actions).
+- Python detection and UTF-16LE/Base64 decoding of PowerShell `-EncodedCommand`, `-e`, `-ec`; decoded payloads are **not executed**.
+- Versioned SOC `AlertEnvelope`/`Evidence` models with timestamp normalization and explicit `missing_evidence`.
+- Read-only Splunk REST connector with bounded Sysmon searches, real-event alert construction and local triage.
+- Correlation against Sysmon parent `ProcessGuid` and PowerShell Event 4104 script-block fragments. Missing parent/script evidence is reported instead of inferred.
+- Offline Python tests; GitHub Actions executes them on pushes and pull requests to `main` and supports manual runs.
 
-## Run the PowerShell triage demo
+**Not built yet:** FastAPI REST/WebSocket service, persistent alerts, agentic AI/RAG investigation, dashboard, and automatic response/remediation.
 
-From PowerShell with Python 3.14 available:
+## Architecture
+
+WIN-LAB (Windows 11, Sysmon, PowerShell 4104) → Splunk Universal Forwarder → Splunk on Ubuntu/Proxmox → bounded REST API searches → Python SOC normalization, correlation and triage.
+
+## Quick start: offline demonstration
 
 ```powershell
-git clone https://github.com/rolandohin/ai_powered_soc_lab.git
-cd ai_powered_soc_lab
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
 .\.venv\Scripts\python.exe .\triage.py --json
+.\.venv\Scripts\python.exe -m pytest -v
 ```
 
-The bundled alert `lab-001` contains a synthetic Sysmon process event. Its evidence entry should include:
+Use test fixtures for CI; do not require live credentials or a Splunk server for automated unit tests.
 
-```json
-{
-  "signals": ["powershell_encoded_command"],
-  "decode_status": "decoded",
-  "decoded_command": "Write-Output 'SOC-LAB'"
-}
-```
+## Live lab (private network only)
 
-The decoded command is benign in this scenario. An invalid payload can still trigger the detection signal and return `decode_status: failed`. In the bundled alert, the parent process event and the PowerShell script block are listed as missing. The separate integration test supplies both a Sysmon event and a synthetic 4104 event.
-
-## Run tests and coverage
+Requires a running Splunk instance and indexed Windows Sysmon/PowerShell events.
 
 ```powershell
-.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
-.\.venv\Scripts\python.exe -m pytest -v --cov=triage --cov=detection_rules --cov=soc_models --cov=soc_normalization --cov-report=term-missing
+python .\splunk_connector.py --host YOUR_SPLUNK_HOST --insecure-lab
+python .\splunk_triage.py --host YOUR_SPLUNK_HOST --insecure-lab
+python .\soc_correlation.py --host YOUR_SPLUNK_HOST --insecure-lab
 ```
 
-The suite covers detection, decoding, model validation, event normalization, and the CLI's text and JSON output. The stage 3 baseline was 19 passing tests and 96% statement coverage in a local Windows run.
+`--insecure-lab` turns off TLS certificate verification. Use only temporarily on a trusted local lab. Prefer `--ca-file` for a trusted CA. Scripts prompt for credentials at runtime. Use a dedicated read-only account in future; `admin` is not recommended for ongoing integration.
+
+## Test and CI
+
+```powershell
+python -m pytest -v --cov=triage --cov=detection_rules --cov=soc_models --cov=soc_normalization --cov=splunk_connector --cov=splunk_triage --cov=soc_correlation --cov-report=term-missing
+```
+
+An earlier milestone had **19 passing tests and 96% statement coverage** for the original modules. The newly added modules have additional local tests, but the full updated count and coverage should be taken from the latest GitHub Actions run, not the historical 96% figure.
 
 ## Project map
 
 | Path | Purpose |
 | --- | --- |
-| [`triage.py`](triage.py) | Loads and validates the sample alert, then produces a text or JSON report |
-| [`detection_rules.py`](detection_rules.py) | Identifies encoded PowerShell invocations |
-| [`soc_models.py`](soc_models.py) | Defines the alert and evidence models |
-| [`soc_normalization.py`](soc_normalization.py) | Converts source event fields to the evidence model |
-| [`schemas/alert-envelope-0.1.schema.json`](schemas/alert-envelope-0.1.schema.json) | Describes the input contract for version 0.1 |
-| [`fixtures/alert.json`](fixtures/alert.json) | Provides the synthetic alert for the CLI demo |
+| `detection_rules.py` | Detect PowerShell encoded-command indicators |
+| `triage.py` | Decode and triage evidence without executing payloads |
+| `soc_models.py` | Validated alert and evidence contracts |
+| `soc_normalization.py` | Convert Sysmon and 4104 fields to evidence |
+| `splunk_connector.py` | Fetch bounded live detection results from Splunk |
+| `splunk_triage.py` | Build `AlertEnvelope` from real Splunk events |
+| `soc_correlation.py` | Enrich process and script block evidence |
+| `test_*.py` | Reproducible offline regression tests |
+| `docs/PROJECT_STATUS.md` | Verified status and current limitations |
+| `docs/LAB_FIELD_REPORT_2026-11-10.md` | Field report, troubleshooting and reproducibility |
 
 ## Roadmap
 
-| Stage | Status |
-| --- | --- |
-| 1. PowerShell analysis and initial detection | Complete |
-| 2. SOC data model and event normalization | Complete |
-| 3. Automated tests, coverage, and CI | Complete |
-| 4. Feasibility and architecture | Next |
-| Live Windows telemetry and Splunk ingestion | Planned |
-| AI-assisted investigation and analyst dashboard | Planned |
+- Original Python SOC models, detection and initial CI: completed.
+- Lab telemetry/Splunk normalization, REST export, Python triage/correlation: validated in the private lab, with explicit caveats on missing evidence.
+- Next: FastAPI integration, persistent backend data and integration tests; later AI-assisted investigation and React frontend.
+
+[Actions](https://github.com/rolandohin/ai_powered_soc_lab/actions)

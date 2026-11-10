@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Raw telemetry, machine-specific exports, and diagnostics
+*.evtx
+*.log
+*.jsonl
+*.ndjson
+local_exports/
+exports/
+artifacts/
+
+# Editors and operating system
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
