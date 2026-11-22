@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System>
+    <Provider Name="Microsoft-Windows-Sysmon" Guid="{5770385f-c22a-43e0-bf4c-06f5698ffbd9}" />
+    <EventID>1</EventID>
+    <Version>5</Version>
+    <Level>4</Level>
+    <Task>1</Task>
+    <Opcode>0</Opcode>
+    <Keywords>0x8000000000000000</Keywords>
+    <TimeCreated SystemTime="2026-01-15T10:00:00.8447747Z" />
+    <EventRecordID>1001</EventRecordID>
+    <Correlation />
+    <Execution ProcessID="1400" ThreadID="1412" />
+    <Channel>Microsoft-Windows-Sysmon/Operational</Channel>
+    <Computer>WIN-LAB</Computer>
+    <Security UserID="S-1-5-18" />
+  </System>
+  <EventData>
+    <Data Name="RuleName">-</Data>
+    <Data Name="UtcTime">2026-01-15 10:00:00.842</Data>
+    <Data Name="ProcessGuid">{c141fd8a-ef12-4a38-955b-14cd6a793c01}</Data>
+    <Data Name="ProcessId">4200</Data>
+    <Data Name="Image">C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe</Data>
+    <Data Name="FileVersion">10.0.26100.9549 (WinBuild.160101.0800)</Data>
+    <Data Name="Description">Windows PowerShell</Data>
+    <Data Name="Product">Microsoft® Windows® Operating System</Data>
+    <Data Name="Company">Microsoft Corporation</Data>
+    <Data Name="OriginalFileName">PowerShell.EXE</Data>
+    <Data Name="CommandLine">"C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -Command "Write-Output 'SOC-LAB-SYSMON-CHECK'"</Data>
+    <Data Name="CurrentDirectory">C:\Users\labuser\</Data>
+    <Data Name="User">WIN-LAB\labuser</Data>
+    <Data Name="LogonGuid">{c141fd8a-ef12-4a38-955b-14cd6a793c03}</Data>
+    <Data Name="LogonId">0x4A210</Data>
+    <Data Name="TerminalSessionId">1</Data>
+    <Data Name="IntegrityLevel">Medium</Data>
+    <Data Name="Hashes">MD5=72B6875643F7DAA7299362D10AA44E3A,SHA256=60C9B29843624DD8AF6B6A7B26147753BE6AEEF65098B9A503CC50850AFE410F,IMPHASH=D13BDC01ABFF6F56AD7B49B3F47C0DE2</Data>
+    <Data Name="ParentProcessGuid">{c141fd8a-ef12-4a38-955b-14cd6a793c02}</Data>
+    <Data Name="ParentProcessId">4100</Data>
+    <Data Name="ParentImage">C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe</Data>
+    <Data Name="ParentCommandLine">"C:\WINDOWS\system32\WindowsPowerShell\v1.0\PowerShell.exe"</Data>
+    <Data Name="ParentUser">WIN-LAB\labuser</Data>
+  </EventData>
+</Event>

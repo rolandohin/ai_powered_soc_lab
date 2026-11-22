@@ -37,4 +37,5 @@ jobs:
           --cov=splunk_connector
           --cov=splunk_triage
           --cov=soc_correlation
+          --cov=sanitize_fixture
           --cov-report=term-missing

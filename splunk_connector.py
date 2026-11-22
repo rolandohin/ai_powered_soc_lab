@@ -15,14 +15,38 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 
-SPL = r'''search index=winlab sourcetype="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational"
-| where EventID="1"
-| where match(Image, "(?i)(powershell|pwsh)\.exe$")
-| rex field=CommandLine "(?i)-(?<encoded_switch>EncodedCommand|ec|e)\s+"
-| where isnotnull(encoded_switch)
-| sort - _time
-| head 5
-| table _time host EventID UtcTime Image ParentImage CommandLine ProcessGuid ParentProcessGuid ProcessId ParentProcessId User encoded_switch'''
+from detection_rules import (
+    ENCODED_COMMAND_NAMES,
+    PARAMETER_PREFIX_CHARACTERS,
+    POWERSHELL_ORIGINAL_FILE_NAMES,
+)
+
+
+def build_detection_spl(max_results: int = 5) -> str:
+    """Build the Splunk pre-filter from the same constants as the Python rule.
+
+    Splunk only narrows the search; detection_rules.py stays the authority and
+    splunk_triage.py rechecks every returned event. Generating the SPL from the
+    Python constants keeps both layers from drifting apart.
+    """
+    prefixes = "|".join(PARAMETER_PREFIX_CHARACTERS)
+    names = "|".join(ENCODED_COMMAND_NAMES)
+    command_regex = rf'(?i)(^|\s)\"?({prefixes})({names})\"?(\s|$)'
+    original_names = ", ".join(f'"{name}"' for name in sorted(POWERSHELL_ORIGINAL_FILE_NAMES))
+    return (
+        'search index=winlab sourcetype="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational"\n'
+        '| where EventID="1"\n'
+        '| where match(Image, "(?i)(powershell|pwsh)\\.exe$")'
+        f' OR in(lower(OriginalFileName), {original_names})\n'
+        f'| where match(CommandLine, "{command_regex}")\n'
+        '| sort - _time\n'
+        f'| head {int(max_results)}\n'
+        '| table _time host EventID UtcTime Image OriginalFileName ParentImage CommandLine'
+        ' ProcessGuid ParentProcessGuid ProcessId ParentProcessId User'
+    )
+
+
+SPL = build_detection_spl()
 
 
 def fetch_detections(host: str, user: str, password: str, *, context: ssl.SSLContext) -> list[dict]:

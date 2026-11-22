@@ -16,6 +16,19 @@ A hands-on SOC engineering lab to build reproducible detection, normalization an
 
 WIN-LAB (Windows 11, Sysmon, PowerShell 4104) → Splunk Universal Forwarder → Splunk on Ubuntu/Proxmox → bounded REST API searches → Python SOC normalization, correlation and triage.
 
+## Windows Sysmon collection troubleshooting
+
+During setup, Sysmon events existed locally but were absent from Splunk while PowerShell events arrived. The Splunk Universal Forwarder service ran as `NT SERVICE\SplunkForwarder`; membership in the built-in Event Log Readers group (SID `S-1-5-32-573`) was required for the observed Sysmon channel ACL. On WIN-LAB, the lab fix was:
+
+```powershell
+# Run as Administrator; verify the Forwarder service identity first.
+Get-CimInstance Win32_Service -Filter "Name='SplunkForwarder'" | Select-Object Name, StartName
+Add-LocalGroupMember -SID 'S-1-5-32-573' -Member 'NT SERVICE\SplunkForwarder' -ErrorAction Stop
+Restart-Service SplunkForwarder
+```
+
+This was **not** an instruction to add `NT AUTHORITY\SYSTEM` to a group. It is only appropriate for the service identity and security descriptor observed in this lab. The complete diagnostic and reproduction steps are in [`docs/LAB_FIELD_REPORT_2026-11-10.md`](docs/LAB_FIELD_REPORT_2026-11-10.md).
+
 ## Quick start: offline demonstration
 
 ```powershell
