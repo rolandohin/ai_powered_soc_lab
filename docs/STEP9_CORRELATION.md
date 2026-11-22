@@ -6,7 +6,7 @@ Date : 10 novembre 2026.
 
 - Validé par l'utilisateur : les requêtes SPL parent et PowerShell 4104 s'exécutent dans Splunk.
 - Validé localement : 15 tests unitaires (`test_splunk_triage` + `test_soc_correlation`).
-- **Validation de terrain ensuite rapportée** : le moteur de corrélation a fonctionné sur les événements réels, avec `missing_evidence: []` pour certaines alertes. D’autres conservent `parent_process_event` ; l’hypothèse d’un démarrage de parent avant l’activation de Sysmon est plausible mais non confirmée.
+- **À valider sur les événements réels** : la présence et le rattachement correct du parent et des fragments PowerShell.
 
 ## Installation
 

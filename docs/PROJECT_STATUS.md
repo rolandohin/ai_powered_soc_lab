@@ -5,7 +5,7 @@ Last reviewed: 2026-11-10. Source of truth: GitHub main after the publication co
 ## Confirmed in the actual local lab (user-run)
 
 - Proxmox VE with Ubuntu Splunk server and Windows 11 WIN-LAB installed.
-- Sysmon and PowerShell Operational events forwarded to Splunk `winlab` index.
+- Sysmon and PowerShell Operational events forwarded to Splunk `winlab` index. Resolved initial Sysmon read-access failure by adding the actual Forwarder service identity `NT SERVICE\SplunkForwarder` to Event Log Readers (SID `S-1-5-32-573`) and restarting the service; this was not `NT AUTHORITY\SYSTEM`.
 - XML event fields extracted automatically; Sysmon field aliases normalized in Splunk.
 - Benign encoded PowerShell execution observed: Sysmon EID 1 and PowerShell EID 4104.
 - SPL detection of encoded PowerShell executed, and search results rendered as JSON.
@@ -32,3 +32,18 @@ Last reviewed: 2026-11-10. Source of truth: GitHub main after the publication co
 1. Push current verified source and offline tests without any secrets or raw telemetry.
 2. Verify GitHub Actions on the new commit and fix any CI regressions.
 3. Begin FastAPI backend (step 10) only after the source and tests are versioned.
+
+## Detection hardening — EncodedCommand evasion (2026-11-22)
+
+| Item | Status |
+|---|---|
+| EncodedCommand prefixes, `/` and en dash detected | Lab-validated |
+| Renamed PowerShell detected via `OriginalFileName` | Lab-validated at source (Sysmon); requires `EXTRACT-sysmon_originalfilename` in Splunk `props.conf` |
+| SPL generated from Python rule constants | In place, tested offline |
+| Evasion corpus in CI | In place |
+| Sanitized Sysmon EID 1 fixture + leak check in CI | In place |
+| Em dash / horizontal bar, PowerShell 7 | Not validated |
+
+Branch: `fix/powershell-encodedcommand-evasion`. Total test count and coverage to be confirmed by the GitHub Actions run on the pull request.
+
+Next roadmap step unchanged: step 10, FastAPI foundation (`GET /health`).
