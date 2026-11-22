@@ -38,4 +38,5 @@ jobs:
           --cov=splunk_triage
           --cov=soc_correlation
           --cov=sanitize_fixture
+          --cov=api
           --cov-report=term-missing
