@@ -49,6 +49,16 @@ class TestLiveSplunkBridge(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Event ID 1"):
             build_alert_envelope(self.event)
 
+    def test_renamed_powershell_is_kept_through_original_file_name(self):
+        self.event["Image"] = r"C:\Users\Public\notepad-soclab-test.exe"
+        self.event["OriginalFileName"] = "PowerShell.EXE"
+        self.event["CommandLine"] = self.event["CommandLine"].replace("-EncodedCommand", "-enc")
+        envelope = build_alert_envelope(self.event)
+        self.assertEqual(envelope.evidence[0].original_file_name, "PowerShell.EXE")
+        triage = build_triage_result(envelope.model_dump(mode="json"))
+        self.assertEqual(triage["evidence"][0]["signals"], ["powershell_encoded_command"])
+        self.assertEqual(triage["evidence"][0]["decoded_command"], "Write-Output 'SOC-LAB'")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -21,6 +21,7 @@ def normalize_sysmon_process_create(
         source_ref=source_ref,
         image=fields.get("Image"),
         command_line=fields.get("CommandLine"),
+        original_file_name=fields.get("OriginalFileName"),
         parent_image=fields.get("ParentImage"),
         process_guid=fields.get("ProcessGuid"),
         parent_process_guid=fields.get("ParentProcessGuid"),
