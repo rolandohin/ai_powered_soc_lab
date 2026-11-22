@@ -44,6 +44,6 @@ Last reviewed: 2026-11-10. Source of truth: GitHub main after the publication co
 | Sanitized Sysmon EID 1 fixture + leak check in CI | In place |
 | Em dash / horizontal bar, PowerShell 7 | Not validated |
 
-Branch: `fix/powershell-encodedcommand-evasion`. Total test count and coverage to be confirmed by the GitHub Actions run on the pull request.
+Merged into `main` via pull request. GitHub Actions (windows-latest, Python 3.14): 96 tests passed, total coverage 73%. Lowest coverage is in network-facing code (`splunk_connector` 35%, `splunk_triage` 46%), whose live Splunk paths are validated in the lab, not in CI.
 
 Next roadmap step unchanged: step 10, FastAPI foundation (`GET /health`).
