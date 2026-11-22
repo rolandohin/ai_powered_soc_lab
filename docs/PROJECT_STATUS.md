@@ -1,12 +1,12 @@
 # AI-Powered SOC Lab — Status
 
-Last reviewed: 2026-11-10. Source of truth: GitHub main after the publication commit.
+Last reviewed: 2026-11-22. Source of truth: GitHub `main` and its latest GitHub Actions run.
 
 ## Confirmed in the actual local lab (user-run)
 
 - Proxmox VE with Ubuntu Splunk server and Windows 11 WIN-LAB installed.
 - Sysmon and PowerShell Operational events forwarded to Splunk `winlab` index. Resolved initial Sysmon read-access failure by adding the actual Forwarder service identity `NT SERVICE\SplunkForwarder` to Event Log Readers (SID `S-1-5-32-573`) and restarting the service; this was not `NT AUTHORITY\SYSTEM`.
-- XML event fields extracted automatically; Sysmon field aliases normalized in Splunk.
+- XML event fields extracted at search time with explicit `EXTRACT-` rules in Splunk `props.conf` (see the field report); a field without its own rule, such as `OriginalFileName` before 2026-11-22, is not available in searches.
 - Benign encoded PowerShell execution observed: Sysmon EID 1 and PowerShell EID 4104.
 - SPL detection of encoded PowerShell executed, and search results rendered as JSON.
 - Splunk management REST API (8089) reachable and successfully authenticated (HTTP 200).
@@ -16,22 +16,24 @@ Last reviewed: 2026-11-10. Source of truth: GitHub main after the publication co
 
 ## Verified by offline/local tests
 
-- Earlier baseline: 19 tests and 96% statement coverage in the original milestone.
-- Additional test modules: 4 tests for Splunk triage and 11 for correlation, reported locally as passing.
-- Total test count and **updated** coverage must be verified by the next GitHub Actions run. Do not present 96% as updated coverage for the new modules.
+- GitHub Actions on PR #2 (windows-latest, Python 3.14): 96 tests passed, 73% total coverage.
+- Includes the evasion corpus, SPL/Python parity tests, fixture leak checks, Splunk triage and correlation tests.
+- Step 10 adds 4 API tests (`test_api_health.py`); the updated CI count will be recorded after its pull request.
 
 ## Not yet implemented / not validated
 
-- Persisted alert store or FastAPI REST and WebSocket endpoints.
+- Persisted alert store; API endpoints beyond `GET /health` (triage, Splunk), API authentication and WebSocket updates.
 - Fully autonomous AI agent, RAG, frontend dashboard, automated remediation.
 - Production-grade Splunk TLS and least-privilege API service account.
 - Complete correlation in every case; current Sysmon/Powershell 4104 PID/time approach is heuristic, with bounded query and fragment limits.
 
 ## Next
 
-1. Push current verified source and offline tests without any secrets or raw telemetry.
-2. Verify GitHub Actions on the new commit and fix any CI regressions.
-3. Begin FastAPI backend (step 10) only after the source and tests are versioned.
+## Next
+
+1. Step 11: expose the triage engine through `POST /triage`, reusing `AlertEnvelope` as the request contract.
+2. Step 12: Splunk-backed endpoint reusing `splunk_triage`, read-only and bounded.
+3. Remove the private Splunk IP used as `--host` default in the scripts; read it from configuration instead.
 
 ## Detection hardening — EncodedCommand evasion (2026-11-22)
 
@@ -46,4 +48,11 @@ Last reviewed: 2026-11-10. Source of truth: GitHub main after the publication co
 
 Merged into `main` via pull request. GitHub Actions (windows-latest, Python 3.14): 96 tests passed, total coverage 73%. Lowest coverage is in network-facing code (`splunk_connector` 35%, `splunk_triage` 46%), whose live Splunk paths are validated in the lab, not in CI.
 
-Next roadmap step unchanged: step 10, FastAPI foundation (`GET /health`).
+## Step 10 — FastAPI foundation (2026-11-22)
+
+| Item | Status |
+|---|---|
+| Runtime dependencies pinned (`pydantic`, `fastapi`, `uvicorn`); `httpx` for tests | Done |
+| `api/main.py` with `GET /health` liveness probe | Done, tested offline with `TestClient` |
+| Server started on `127.0.0.1:8001`; `/health` and `/docs` checked in a browser | Lab-validated |
+| API coverage tracked in CI (`--cov=api`) | In place |

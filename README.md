@@ -1,16 +1,17 @@
-# AI-Powered SOC Lab
+﻿# AI-Powered SOC Lab
 
 A hands-on SOC engineering lab to build reproducible detection, normalization and triage workflows using both synthetic and real Windows telemetry.
 
 ## Current working scope (November 2026)
 
-- Python detection and UTF-16LE/Base64 decoding of PowerShell `-EncodedCommand`, `-e`, `-ec`; decoded payloads are **not executed**.
+- Python detection and UTF-16LE/Base64 decoding of PowerShell `-EncodedCommand` and every unambiguous abbreviation (`-e`, `-ec`, `-enc`, ...), with `-`, `/` or Unicode dash prefixes; renamed `powershell.exe` is identified through Sysmon `OriginalFileName`. Decoded payloads are **not executed**.
+- FastAPI service with a `GET /health` liveness probe (step 10).
 - Versioned SOC `AlertEnvelope`/`Evidence` models with timestamp normalization and explicit `missing_evidence`.
 - Read-only Splunk REST connector with bounded Sysmon searches, real-event alert construction and local triage.
 - Correlation against Sysmon parent `ProcessGuid` and PowerShell Event 4104 script-block fragments. Missing parent/script evidence is reported instead of inferred.
 - Offline Python tests; GitHub Actions executes them on pushes and pull requests to `main` and supports manual runs.
 
-**Not built yet:** FastAPI REST/WebSocket service, persistent alerts, agentic AI/RAG investigation, dashboard, and automatic response/remediation.
+**Not built yet:** triage and Splunk endpoints in the API, authentication, WebSocket updates, persistent alerts, agentic AI/RAG investigation, dashboard, and automatic response/remediation.
 
 ## Architecture
 
@@ -40,6 +41,19 @@ python -m venv .venv
 
 Use test fixtures for CI; do not require live credentials or a Splunk server for automated unit tests.
 
+## Run the API
+
+The API exposes the SOC Lab engine over HTTP. It currently provides a liveness probe only.
+
+```powershell
+python -m uvicorn api.main:app --host 127.0.0.1 --port 8001 --reload
+```
+
+- `GET /health` returns `{"status": "ok", "service": "ai-powered-soc-lab", "version": "0.1.0"}`.
+- Interactive documentation: `http://127.0.0.1:8001/docs`.
+- The server binds to `127.0.0.1` only. Do not expose it on the lab network before authentication is in place (roadmap step 15).
+- `/health` is a liveness probe: it deliberately checks no dependency (Splunk, database).
+
 ## Live lab (private network only)
 
 Requires a running Splunk instance and indexed Windows Sysmon/PowerShell events.
@@ -57,8 +71,9 @@ python .\soc_correlation.py --host YOUR_SPLUNK_HOST --insecure-lab
 ```powershell
 python -m pytest -v --cov=triage --cov=detection_rules --cov=soc_models --cov=soc_normalization --cov=splunk_connector --cov=splunk_triage --cov=soc_correlation --cov-report=term-missing
 ```
+python -m pytest -v --cov=triage --cov=detection_rules --cov=soc_models --cov=soc_normalization --cov=splunk_connector --cov=splunk_triage --cov=soc_correlation --cov=sanitize_fixture --cov=api --cov-report=term-missing
 
-An earlier milestone had **19 passing tests and 96% statement coverage** for the original modules. The newly added modules have additional local tests, but the full updated count and coverage should be taken from the latest GitHub Actions run, not the historical 96% figure.
+Latest verified GitHub Actions run (PR #2, detection hardening): 96 tests passed, 73% total coverage. Lowest coverage is in network-facing code (`splunk_connector`, `splunk_triage`), whose live Splunk paths are validated in the lab rather than in CI. Check [Actions](https://github.com/rolandohin/ai_powered_soc_lab/actions) for the current run.
 
 ## Project map
 
@@ -71,14 +86,19 @@ An earlier milestone had **19 passing tests and 96% statement coverage** for the
 | `splunk_connector.py` | Fetch bounded live detection results from Splunk |
 | `splunk_triage.py` | Build `AlertEnvelope` from real Splunk events |
 | `soc_correlation.py` | Enrich process and script block evidence |
-| `test_*.py` | Reproducible offline regression tests |
+| `test_*.py` | Reproducible offline regression tests, including the evasion corpus in `test_detection_rules.py` |
 | `docs/PROJECT_STATUS.md` | Verified status and current limitations |
 | `docs/LAB_FIELD_REPORT_2026-11-10.md` | Field report, troubleshooting and reproducibility |
+| `api/main.py` | FastAPI application and `GET /health` |
+| `sanitize_fixture.py` | Replace lab identifiers in XML fixtures before committing them |
+| `fixtures/` | Sanitized event samples for offline tests |
 
 ## Roadmap
 
 - Original Python SOC models, detection and initial CI: completed.
 - Lab telemetry/Splunk normalization, REST export, Python triage/correlation: validated in the private lab, with explicit caveats on missing evidence.
-- Next: FastAPI integration, persistent backend data and integration tests; later AI-assisted investigation and React frontend.
+- Detection hardening (EncodedCommand evasion, renamed PowerShell): validated in the lab and in CI.
+- FastAPI foundation with `GET /health` (step 10): done.
+- Next: `POST /triage` (step 11), Splunk endpoint, persistence, alert lifecycle and API security; later AI-assisted investigation and React frontend.
 
 [Actions](https://github.com/rolandohin/ai_powered_soc_lab/actions)
